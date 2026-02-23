@@ -44,5 +44,10 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"surrealdb": "^1.3.2",
+		"valibot": "^1.2.0",
+		"vitest": "^4.0.18"
 	}
 }
