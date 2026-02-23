@@ -34,10 +34,10 @@ The app will be available at `http://localhost:5173`.
 
 Detailed documentation is available in the `/docs` directory:
 
-- [**Architecture Guide**](./ARCHITECTURE.md) - Deep dive into SurrealDB graph relationships and the recursive delete function.
-- [**User Guide**](./USER_GUIDE.md) - How to navigate the UI, manage files, and use the built-in editor.
-- [**Developer Guide**](./DEVELOPER_GUIDE.md) - Local setup, testing with Vitest, and contribution workflow.
-- [**Contributing**](./CONTRIBUTING.md) - Guidelines for reporting bugs and submitting pull requests.
+- [**Architecture Guide**](/docs/ARCHITECTURE.md) - Deep dive into SurrealDB graph relationships and the recursive delete function.
+- [**User Guide**](/docs/USER_GUIDE.md) - How to navigate the UI, manage files, and use the built-in editor.
+- [**Developer Guide**](/docs/DEVELOPER_GUIDE.md) - Local setup, testing with Vitest, and contribution workflow.
+- [**Contributing**](/docs/CONTRIBUTING.md) - Guidelines for reporting bugs and submitting pull requests.
 
 ## ✨ Key Features
 
