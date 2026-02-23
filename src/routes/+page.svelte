@@ -11,16 +11,15 @@
 		deleteFile,
 		deleteFolderAndContents
 	} from './FileSystem.remote'; // Adjust path if needed
+	import type { Folder, File, FolderContents } from '$lib/domain/FileSystemTypes';
 
-	type Folder = { id: string; name: string };
-	type File = { id: string; title: string; content: string };
 
 	// Navigation State
-	let currentFolder = $state<Folder | null>(null);
-	let breadcrumbs = $state<Folder[]>([]);
-
+	let currentFolder = $state<Folder<string> | null>(null);
+	let breadcrumbs = $state<Folder<string>[]>([]);
+ 
 	// Editor State
-	let selectedFile = $state<File | null>(null);
+	let selectedFile = $state<File<string> | null>(null);
 	let editorContent = $state('');
 	let isSaving = $state(false);
 
@@ -34,7 +33,12 @@
 		if (!name) return;
 
 		// Temporary optimistic object
-		const tempFolder = { id: `folder:temp-${Date.now()}`, name };
+		const tempFolder: Folder<string> = {
+			id: `folder:temp-${Date.now()}`,
+			name,
+			is_open: false,
+			created_at: new Date().toISOString()
+		};
 
 		try {
 			const mutation = createFolder({ name, parentId: currentFolder?.id });
@@ -44,11 +48,11 @@
 					getFolderContents(currentFolder.id).withOverride((data) => ({
 						folders: [...(data?.folders || []), tempFolder],
 						files: data?.files || []
-					}))
+					}) as FolderContents<string>)
 				);
 			} else {
 				await mutation.updates(
-					getRootFolders().withOverride((folders) => [...(folders || []), tempFolder])
+					getRootFolders().withOverride((folders) => [...(folders || []), tempFolder] as Folder<string>[])
 				);
 			}
 		} catch (error: any) {
@@ -64,14 +68,24 @@
 		const title = prompt('Enter file name (e.g., test.txt):');
 		if (!title) return;
 
-		const tempFile = { id: `file:temp-${Date.now()}`, title, content: '' };
+		const tempFile: File<string> = {
+			id: `file:temp-${Date.now()}`,
+			title,
+			content: '',
+			created_at: new Date().toISOString(),
+			updated_at: new Date().toISOString()
+		};
 
 		try {
-			await createFile({ title, parentId: currentFolder.id, content: '' }).updates(
+			await createFile({
+				title,
+				parentId: currentFolder.id,
+				content: ''
+			}).updates(
 				getFolderContents(currentFolder.id).withOverride((data) => ({
 					folders: data?.folders || [],
 					files: [...(data?.files || []), tempFile]
-				}))
+				}) as FolderContents<string>)
 			);
 		} catch (error: any) {
 			errorMessage = error.message;
@@ -94,12 +108,12 @@
 						files: !isFolder
 							? (data?.files || []).map((f) => (f.id === id ? { ...f, title: newName } : f))
 							: data?.files || []
-					}))
+					}) as FolderContents<string>)
 				);
 			} else {
 				await mutation.updates(
 					getRootFolders().withOverride((folders) =>
-						(folders || []).map((f) => (f.id === id ? { ...f, name: newName } : f))
+						((folders || []).map((f) => (f.id === id ? { ...f, name: newName } : f))) as Folder<string>[]
 					)
 				);
 			}
@@ -132,11 +146,13 @@
 						files: !isFolder
 							? (data?.files || []).filter((f) => f.id !== itemId)
 							: data?.files || []
-					}))
+					}) as FolderContents<string>)
 				);
 			} else {
 				await mutation.updates(
-					getRootFolders().withOverride((folders) => (folders || []).filter((f) => f.id !== itemId))
+					getRootFolders().withOverride((folders) =>
+						((folders || []).filter((f) => f.id !== itemId)) as Folder<string>[]
+					)
 				);
 			}
 		} catch (error: any) {
@@ -153,11 +169,13 @@
 					getFolderContents(currentFolder.id).withOverride((data) => ({
 						folders: (data?.folders || []).filter((f) => f.id !== id),
 						files: data?.files || []
-					}))
+					}) as FolderContents<string>)
 				);
 			} else {
 				await mutation.updates(
-					getRootFolders().withOverride((folders) => (folders || []).filter((f) => f.id !== id))
+					getRootFolders().withOverride((folders) =>
+						((folders || []).filter((f) => f.id !== id)) as Folder<string>[]
+					)
 				);
 			}
 		} catch (error: any) {
@@ -174,7 +192,7 @@
 				getFolderContents(currentFolder.id).withOverride((data) => ({
 					folders: data?.folders || [],
 					files: (data?.files || []).filter((f) => f.id !== id)
-				}))
+				}) as FolderContents<string>)
 			);
 
 			if (selectedFile?.id === id) {
@@ -191,9 +209,12 @@
 		isSaving = true;
 		errorMessage = null;
 		try {
-			await updateFileContent({ fileId: selectedFile.id, content: editorContent }).updates(
+			await updateFileContent({
+				fileId: selectedFile.id,
+				content: editorContent
+			}).updates(
 				getFile(selectedFile.id).withOverride((fileData) => ({
-					...(fileData as File),
+					...(fileData as File<string>),
 					content: editorContent
 				}))
 			);
@@ -208,7 +229,7 @@
 
 	// --- Navigation Helpers --- //
 
-	function openFolder(folder: Folder) {
+	function openFolder(folder: Folder<string>) {
 		if (currentFolder) {
 			breadcrumbs = [...breadcrumbs, currentFolder];
 		}
@@ -228,7 +249,7 @@
 		selectedFile = null;
 	}
 
-	async function openFile(file: File) {
+	async function openFile(file: File<string>) {
 		try {
 			selectedFile = file;
 			const data = await getFile(file.id);
@@ -307,15 +328,16 @@
 							<div class="hidden gap-1 text-xs group-hover:flex">
 								<button
 									class="rounded p-1 hover:bg-gray-200"
-									onclick={() => handleRename(folder.id, folder.name, true)}>Rename</button
+									onclick={() => handleRename(folder.id.toString(), folder.name, true)}
+									>Rename</button
 								>
 								<button
 									class="rounded p-1 hover:bg-gray-200"
-									onclick={() => handleMove(folder.id, true)}>Move</button
+									onclick={() => handleMove(folder.id.toString(), true)}>Move</button
 								>
 								<button
 									class="rounded p-1 text-red-600 hover:bg-red-100"
-									onclick={() => handleDeleteFolder(folder.id)}>Del</button
+									onclick={() => handleDeleteFolder(folder.id.toString())}>Del</button
 								>
 							</div>
 						</div>
@@ -371,15 +393,16 @@
 							<div class="hidden gap-1 text-xs group-hover:flex">
 								<button
 									class="rounded p-1 hover:bg-gray-200"
-									onclick={() => handleRename(folder.id, folder.name, true)}>Rename</button
+									onclick={() => handleRename(folder.id.toString(), folder.name, true)}
+									>Rename</button
 								>
 								<button
 									class="rounded p-1 hover:bg-gray-200"
-									onclick={() => handleMove(folder.id, true)}>Move</button
+									onclick={() => handleMove(folder.id.toString(), true)}>Move</button
 								>
 								<button
 									class="rounded p-1 text-red-600 hover:bg-red-100"
-									onclick={() => handleDeleteFolder(folder.id)}>Del</button
+									onclick={() => handleDeleteFolder(folder.id.toString())}>Del</button
 								>
 							</div>
 						</div>

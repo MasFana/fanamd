@@ -22,11 +22,10 @@ export class FileSystemService {
 	/**
 	 * Helper to safely format IDs returned by SurrealDB to string
 	 */
-	private static sanitizeId<T extends { id: string | RecordId }>(record: T): T {
-		if (!record) return record;
+	private static sanitizeId<T extends { id: string | RecordId }>(record: T): T & { id: string } {
 		return {
 			...record,
-			id: record.id instanceof RecordId ? record.id.toString() : record.id
+			id: record.id instanceof RecordId ? record.id.toString() : (record.id as string)
 		};
 	}
 
@@ -59,7 +58,7 @@ export class FileSystemService {
 	// READ OPERATIONS (VSCode Sidebar)
 	// ==========================================
 
-	static async getRootFolders(): Promise<Folder[]> {
+	static async getRootFolders(): Promise<Folder<string>[]> {
 		try {
 			await connectDB();
 			const [result] = await db.query<[Folder[]]>(surql`
@@ -71,7 +70,7 @@ export class FileSystemService {
 		}
 	}
 
-	static async getFolderContents(folderId: string): Promise<FolderContents> {
+	static async getFolderContents(folderId: string): Promise<FolderContents<string>> {
 		this.validateId(folderId, 'folder');
 
 		try {
@@ -93,7 +92,7 @@ export class FileSystemService {
 		}
 	}
 
-	static async getFile(fileId: string): Promise<File | null> {
+	static async getFile(fileId: string): Promise<File<string> | null> {
 		this.validateId(fileId, 'file');
 
 		try {
@@ -109,7 +108,7 @@ export class FileSystemService {
 	// WRITE OPERATIONS (CRUD)
 	// ==========================================
 
-	static async createFolder(name: string, parentId?: string): Promise<Folder> {
+	static async createFolder(name: string, parentId?: string): Promise<Folder<string>> {
 		if (parentId) this.validateId(parentId, 'folder');
 
 		try {
@@ -134,7 +133,7 @@ export class FileSystemService {
 		}
 	}
 
-	static async createFile(title: string, parentId: string, content: string = ''): Promise<File> {
+	static async createFile(title: string, parentId: string, content: string = ''): Promise<File<string>> {
 		this.validateId(parentId, 'folder');
 
 		try {
@@ -161,7 +160,7 @@ export class FileSystemService {
 	// UPDATE OPERATIONS (Rename, Move, Content)
 	// ==========================================
 
-	static async updateFileContent(fileId: string, content: string): Promise<File> {
+	static async updateFileContent(fileId: string, content: string): Promise<File<string>> {
 		this.validateId(fileId, 'file');
 
 		try {
