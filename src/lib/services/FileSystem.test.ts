@@ -65,6 +65,23 @@ RELATE $trash->contains->$f_old;
 COMMIT TRANSACTION;
 `;
 
+const cleanup = async () => {
+	// 1. Tables support "IF EXISTS"
+	await db.query(`
+        REMOVE TABLE IF EXISTS folder;
+        REMOVE TABLE IF EXISTS file;
+        REMOVE TABLE IF EXISTS contains;
+    `);
+
+	// 2. Functions do NOT support "IF EXISTS".
+	// We wrap it in a try/catch or use .catch() to ignore the error if the function is missing.
+	try {
+		await db.query(`REMOVE FUNCTION fn::recursive_delete;`);
+	} catch (e) {
+		// Ignore error: "The function 'fn::recursive_delete' does not exist"
+	}
+};
+
 describe('FileSystemService End-to-End Tests', () => {
 	// Store IDs globally for use across tests
 	let rootFolderId: string;
@@ -74,9 +91,7 @@ describe('FileSystemService End-to-End Tests', () => {
 	beforeAll(async () => {
 		await connectDB();
 		// Clear db for clean slate
-		await db.query(
-			`REMOVE TABLE IF EXISTS folder; REMOVE TABLE IF EXISTS file; REMOVE TABLE IF EXISTS contains; REMOVE FUNCTION fn::recursive_delete;`
-		);
+		await cleanup();
 		// Apply Schema and Seed Data
 		await db.query(SCHEMA);
 		await db.query(SEED_DATA);
@@ -84,9 +99,7 @@ describe('FileSystemService End-to-End Tests', () => {
 
 	afterAll(async () => {
 		// Clean up database after tests
-		await db.query(
-			`REMOVE TABLE folder; REMOVE TABLE file; REMOVE TABLE contains; REMOVE FUNCTION fn::recursive_delete;`
-		);
+		await cleanup();
 	});
 
 	describe('1. Read Operations', () => {
