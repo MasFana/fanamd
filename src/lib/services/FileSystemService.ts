@@ -58,6 +58,9 @@ export class FileSystemService {
 	// READ OPERATIONS (VSCode Sidebar)
 	// ==========================================
 
+	/**
+	 * Fetches all folders that have no parent (top-level folders).
+	 */
 	static async getRootFolders(): Promise<Folder<string>[]> {
 		try {
 			await connectDB();
@@ -70,6 +73,10 @@ export class FileSystemService {
 		}
 	}
 
+	/**
+	 * Fetches all subfolders and files contained within a folder.
+	 * @param folderId The ID of the parent folder.
+	 */
 	static async getFolderContents(folderId: string): Promise<FolderContents<string>> {
 		this.validateId(folderId, 'folder');
 
@@ -92,6 +99,10 @@ export class FileSystemService {
 		}
 	}
 
+	/**
+	 * Fetches a specific file by its ID.
+	 * @param fileId The ID of the file.
+	 */
 	static async getFile(fileId: string): Promise<File<string> | null> {
 		this.validateId(fileId, 'file');
 
@@ -108,6 +119,11 @@ export class FileSystemService {
 	// WRITE OPERATIONS (CRUD)
 	// ==========================================
 
+	/**
+	 * Creates a new folder.
+	 * @param name The name of the new folder.
+	 * @param parentId Optional parent folder ID. If omitted, it's a root folder.
+	 */
 	static async createFolder(name: string, parentId?: string): Promise<Folder<string>> {
 		if (parentId) this.validateId(parentId, 'folder');
 
@@ -133,7 +149,17 @@ export class FileSystemService {
 		}
 	}
 
-	static async createFile(title: string, parentId: string, content: string = ''): Promise<File<string>> {
+	/**
+	 * Creates a new file.
+	 * @param title The title of the file.
+	 * @param parentId The ID of the parent folder.
+	 * @param content Optional initial content.
+	 */
+	static async createFile(
+		title: string,
+		parentId: string,
+		content: string = ''
+	): Promise<File<string>> {
 		this.validateId(parentId, 'folder');
 
 		try {
@@ -160,6 +186,11 @@ export class FileSystemService {
 	// UPDATE OPERATIONS (Rename, Move, Content)
 	// ==========================================
 
+	/**
+	 * Updates the text content of a file.
+	 * @param fileId The ID of the file.
+	 * @param content The new content.
+	 */
 	static async updateFileContent(fileId: string, content: string): Promise<File<string>> {
 		this.validateId(fileId, 'file');
 
@@ -173,6 +204,11 @@ export class FileSystemService {
 		}
 	}
 
+	/**
+	 * Renames a file or folder.
+	 * @param id The ID of the item.
+	 * @param newName The new name (name for folders, title for files).
+	 */
 	static async renameItem(id: string, newName: string): Promise<void> {
 		this.validateId(id, 'any'); // Validates that it's either file: or folder:
 
@@ -186,6 +222,11 @@ export class FileSystemService {
 		}
 	}
 
+	/**
+	 * Moves an item to a different parent folder.
+	 * @param itemId The ID of the item to move.
+	 * @param newParentId The ID of the new parent folder.
+	 */
 	static async moveItem(itemId: string, newParentId: string): Promise<void> {
 		this.validateId(itemId, 'any');
 		this.validateId(newParentId, 'folder'); // Parent must be a folder
@@ -209,6 +250,10 @@ export class FileSystemService {
 	// DELETE OPERATIONS
 	// ==========================================
 
+	/**
+	 * Deletes a file.
+	 * @param fileId The ID of the file to delete.
+	 */
 	static async deleteFile(fileId: string): Promise<void> {
 		// Strict validation prevents deleting a folder via the deleteFile method
 		this.validateId(fileId, 'file');
@@ -221,6 +266,10 @@ export class FileSystemService {
 		}
 	}
 
+	/**
+	 * Recursively deletes a folder and all its subfolders and files.
+	 * @param folderId The ID of the folder to delete.
+	 */
 	static async deleteFolderAndContents(folderId: string): Promise<void> {
 		this.validateId(folderId, 'folder');
 

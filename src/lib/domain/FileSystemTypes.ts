@@ -1,10 +1,15 @@
 import { RecordId } from 'surrealdb';
 
-// The base constraint required by surrealdb
+/**
+ * Base interface for SurrealDB records
+ */
 export interface SurrealRecord {
 	[key: string]: unknown;
 }
 
+/**
+ * Represents a Folder in the virtual file system
+ */
 export interface Folder<ID = string | RecordId> extends SurrealRecord {
 	id: ID;
 	name: string;
@@ -12,6 +17,9 @@ export interface Folder<ID = string | RecordId> extends SurrealRecord {
 	created_at: Date | string;
 }
 
+/**
+ * Represents a File in the virtual file system
+ */
 export interface File<ID = string | RecordId> extends SurrealRecord {
 	id: ID;
 	title: string;
@@ -20,6 +28,9 @@ export interface File<ID = string | RecordId> extends SurrealRecord {
 	updated_at: Date | string;
 }
 
+/**
+ * Represents the nested contents of a folder
+ */
 export interface FolderContents<ID = string | RecordId> {
 	folders: Folder<ID>[];
 	files: File<ID>[];

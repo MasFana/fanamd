@@ -1,4 +1,8 @@
-import { query, command } from '$app/server'; // <-- ADD action
+/**
+ * RPC layer for the File Explorer and Editor UI.
+ * Connects the frontend to the backend FileSystemService.
+ */
+import { query, command } from '$app/server';
 import { FileSystemService } from '$lib';
 import { string, object, optional } from 'valibot';
 
@@ -6,6 +10,9 @@ import { string, object, optional } from 'valibot';
 // READ OPERATIONS (query)
 // ==========================================
 
+/**
+ * Fetches all root folders in the virtual file system.
+ */
 export const getRootFolders = query(async () => {
 	try {
 		return await FileSystemService.getRootFolders();
@@ -14,6 +21,9 @@ export const getRootFolders = query(async () => {
 	}
 });
 
+/**
+ * Fetches the contents (subfolders and files) of a specific folder.
+ */
 export const getFolderContents = query(string(), async (folderId: string) => {
 	try {
 		return await FileSystemService.getFolderContents(folderId);
@@ -22,6 +32,9 @@ export const getFolderContents = query(string(), async (folderId: string) => {
 	}
 });
 
+/**
+ * Fetches a single file by its ID.
+ */
 export const getFile = query(string(), async (fileId: string) => {
 	try {
 		return await FileSystemService.getFile(fileId);
@@ -31,9 +44,12 @@ export const getFile = query(string(), async (fileId: string) => {
 });
 
 // ==========================================
-// WRITE OPERATIONS (action) <-- Changed to action()
+// WRITE OPERATIONS (command)
 // ==========================================
 
+/**
+ * Creates a new folder.
+ */
 export const createFolder = command(
 	object({
 		name: string(),
@@ -48,6 +64,9 @@ export const createFolder = command(
 	}
 );
 
+/**
+ * Creates a new file within a parent folder.
+ */
 export const createFile = command(
 	object({
 		title: string(),
@@ -64,9 +83,12 @@ export const createFile = command(
 );
 
 // ==========================================
-// UPDATE OPERATIONS (action) <-- Changed to action()
+// UPDATE OPERATIONS (command)
 // ==========================================
 
+/**
+ * Updates the content of a file.
+ */
 export const updateFileContent = command(
 	object({
 		fileId: string(),
@@ -81,6 +103,9 @@ export const updateFileContent = command(
 	}
 );
 
+/**
+ * Renames an item (file or folder).
+ */
 export const renameItem = command(
 	object({
 		id: string(),
@@ -96,6 +121,9 @@ export const renameItem = command(
 	}
 );
 
+/**
+ * Moves an item to a new parent folder.
+ */
 export const moveItem = command(
 	object({
 		itemId: string(),
@@ -112,9 +140,12 @@ export const moveItem = command(
 );
 
 // ==========================================
-// DELETE OPERATIONS (action) <-- Changed to action()
+// DELETE OPERATIONS (command)
 // ==========================================
 
+/**
+ * Deletes a single file.
+ */
 export const deleteFile = command(string(), async (fileId: string) => {
 	try {
 		await FileSystemService.deleteFile(fileId);
@@ -124,6 +155,9 @@ export const deleteFile = command(string(), async (fileId: string) => {
 	}
 });
 
+/**
+ * Deletes a folder and all its recursive contents.
+ */
 export const deleteFolderAndContents = command(string(), async (folderId: string) => {
 	try {
 		await FileSystemService.deleteFolderAndContents(folderId);

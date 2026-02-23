@@ -1,7 +1,18 @@
 import { Surreal } from 'surrealdb';
 
+/**
+ * SurrealDB client instance
+ */
 export const db = new Surreal();
+
+/**
+ * Flag to track connection status
+ */
 export let isConnected = false;
+
+/**
+ * Establishes a connection to SurrealDB and performs authentication
+ */
 export async function connectDB() {
 	try {
 		if (!isConnected) {
